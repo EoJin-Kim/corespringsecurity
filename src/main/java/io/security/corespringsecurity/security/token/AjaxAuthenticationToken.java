@@ -15,12 +15,14 @@ public class AjaxAuthenticationToken extends AbstractAuthenticationToken {
         super(null);
         this.principal = principal;
         this.credentials = credentials;
+        setAuthenticated(false);
     }
 
     public AjaxAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
         this.principal = principal;
         this.credentials = credentials;
+        super.setAuthenticated(true);
     }
 
     @Override
@@ -31,5 +33,18 @@ public class AjaxAuthenticationToken extends AbstractAuthenticationToken {
     @Override
     public Object getPrincipal() {
         return this.principal;
+    }
+
+    public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+        if (isAuthenticated) {
+            throw new IllegalArgumentException("Cannot set this token to trusted - use constructor which takes a GrantedAuthority list instead");
+        } else {
+            super.setAuthenticated(false);
+        }
+    }
+
+    public void eraseCredentials() {
+        super.eraseCredentials();
+        this.credentials = null;
     }
 }

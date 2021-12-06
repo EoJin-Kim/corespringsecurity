@@ -1,6 +1,7 @@
 package io.security.corespringsecurity.security.configs;
 
 import io.security.corespringsecurity.security.common.FormWebAuthenticationDetailsSource;
+import io.security.corespringsecurity.security.filter.AjaxLoginProcessingFilter;
 import io.security.corespringsecurity.security.handler.FormAccessDeniedHandler;
 import io.security.corespringsecurity.security.provider.FormAuthenticationProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -60,7 +62,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/config").hasRole("ADMIN")
                 .antMatchers("/**").permitAll()
                 .anyRequest().authenticated()
-        .and()
+                .and()
                 .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/login_proc")
@@ -68,12 +70,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .successHandler(formAuthenticationSuccessHandler)
                 .failureHandler(formAuthenticationFailureHandler)
                 .permitAll()
-        .and()
+                .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
                 .accessDeniedPage("/denied")
                 .accessDeniedHandler(accessDeniedHandler())
-        ;
+
+                .and()
+                .addFilterBefore(ajaxLoginProcessingFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
     @Bean
@@ -91,5 +95,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         FormAccessDeniedHandler commonAccessDeniedHandler = new FormAccessDeniedHandler();
         commonAccessDeniedHandler.setErrorPage("/denied");
         return commonAccessDeniedHandler;
+    }
+    @Bean
+    public AjaxLoginProcessingFilter ajaxLoginProcessingFilter() throws Exception {
+        AjaxLoginProcessingFilter ajaxLoginProcessingFilter = new AjaxLoginProcessingFilter();
+        ajaxLoginProcessingFilter.setAuthenticationManager(authenticationManagerBean());
+        return ajaxLoginProcessingFilter;
     }
 }
